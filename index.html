@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คำถามที่วัดว่าคุณรู้จักชินมากแค่ไหน</title>
+    <style>
+        /* --- CSS STYLING --- */
+        
+        /* 1. Basic Setup & Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;700&display=swap');
+
+        :root {
+            --bg-color: #f3e5f5; /* ม่วงอ่อน */
+            --primary-color: #4a148c; /* ม่วงเข้ม */
+            --accent-color: #d81b60;   /* แดง/ชมพูเข้ม */
+            --white-color: #ffffff;
+            --disabled-color: #c0c0c0;
+            --light-purple: #ede7f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'IBM Plex Sans Thai', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* 2. Main Container */
+        .container {
+            background-color: var(--white-color);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        /* 3. Stage Management */
+        .stage {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .stage.active {
+            display: flex;
+        }
+        
+        /* (Styles 4-9 ... ไม่เปลี่ยนแปลง ...) */
+        
+        /* 4. Elements Styling (h1, h2, p) */
+        h1, h2 { font-weight: 700; color: var(--primary-color); }
+        h2 { font-size: 1.25rem; }
+        p { font-size: 1.1rem; line-height: 1.6; }
+        /* 5. Button Styling (.btn) */
+        .btn { font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 1.2rem; font-weight: 700; background-color: var(--accent-color); color: var(--white-color); border: none; border-radius: 50px; padding: 0.8rem 2.5rem; cursor: pointer; transition: transform 0.2s ease, background-color 0.2s ease; width: 100%; max-width: 250px; }
+        .btn:hover { transform: scale(1.05); }
+        .btn:disabled { background-color: var(--disabled-color); cursor: not-allowed; transform: scale(1); }
+        /* 6. Input Styling (.name-input) */
+        .name-input { font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 1rem; padding: 0.8rem; border: 2px solid var(--primary-color); border-radius: 10px; width: 100%; text-align: center; }
+        .name-input:focus { outline: none; border-color: var(--accent-color); box-shadow: 0 0 10px rgba(216, 27, 96, 0.3); }
+        /* 7. Image Styling (#qrImage, #splashImage) */
+        #qrImage, #splashImage { width: 100%; height: auto; border-radius: 10px; margin-top: 1rem; }
+        #qrImage { max-width: 250px; }
+        #splashImage { max-width: 200px; }
+        .reveal-text { font-size: 1.5rem; font-weight: 700; color: var(--accent-color); margin-top: 1rem; }
+        /* 8. Choice Buttons Styling */
+        .choices-container { display: flex; flex-direction: column; gap: 0.75rem; width: 100%; }
+        .choice-btn { font-family: 'IBM Plex Sans Thai', sans-serif; font-size: 1rem; background-color: var(--white-color); color: var(--primary-color); border: 2px solid var(--primary-color); border-radius: 15px; padding: 0.8rem 1rem; cursor: pointer; width: 100%; text-align: center; transition: background-color 0.2s, color 0.2s, transform 0.2s; }
+        .choice-btn:hover { background-color: var(--light-purple); transform: scale(1.02); }
+        .choice-btn.selected { background-color: var(--accent-color); color: var(--white-color); border-color: var(--accent-color); }
+        /* 9. Summary Styling */
+        #summary-container { margin-top: 1.5rem; text-align: left; width: 100%; border-top: 2px dashed var(--disabled-color); padding-top: 1.5rem; }
+        .summary-item { margin-bottom: 1rem; }
+        .summary-item p { font-size: 0.9rem; margin: 0.25rem 0; line-height: 1.4; }
+        #game-score-summary { font-size: 1.1rem; font-weight: 700; color: var(--primary-color); text-align: center; margin-top: 1rem; }
+        .calc-note { font-size: 0.8rem; color: #666; background: #f9f9f9; padding: 5px; border-radius: 5px; }
+
+
+        /* 10. Emoji Styling */
+        @keyframes float {
+            0% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) translateX(10px) rotate(10deg); }
+            100% { transform: translateY(0px) translateX(0px) rotate(0deg); }
+        }
+        .floating-emoji { position: fixed; z-index: 5; font-size: 2.5rem; user-select: none; cursor: pointer; animation: float 6s ease-in-out infinite; transition: transform 0.5s ease-out, opacity 0.5s ease-out; opacity: 0.7; }
+        .floating-emoji:hover { opacity: 1; transform: scale(1.2); }
+        .floating-emoji.hidden { transform: scale(0) rotate(360deg); opacity: 0; }
+        #emoji-1 { top: 15%; left: 8%; animation-delay: -1s; }
+        #emoji-2 { top: 40%; right: 10%; animation-delay: -3s; }
+        #emoji-3 { top: 70%; left: 12%; animation-delay: -5s; }
+        #emoji-4 { top: 80%; right: 15%; animation-delay: -2s; }
+        
+        /* --- ⭐️ 11. MINIGAME STYLING (ปรับแก้) ⭐️ --- */
+        
+        #game-area {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(243, 229, 245, 0.8);
+            z-index: 100;
+            overflow: hidden;
+            display: none;
+        }
+
+        #game-info {
+            position: absolute; top: 20px; left: 20px; right: 20px;
+            display: flex; justify-content: space-between;
+            font-size: 1.5rem; font-weight: 700; color: var(--primary-color);
+        }
+
+        #countdown-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex; justify-content: center; align-items: center;
+            font-size: 8rem; font-weight: 700; color: var(--white-color);
+            z-index: 102;
+        }
+        
+        .game-emoji {
+            position: absolute;
+            font-size: 2.5rem; /* ⭐️ ปรับแก้: เพิ่มขนาดจาก 2rem */
+            user-select: none;
+            cursor: pointer;
+            transition: transform 0.3s ease-out;
+        }
+        .game-emoji:hover {
+            transform: scale(1.2);
+        }
+        
+        .floating-score {
+            position: absolute;
+            font-size: 1.5rem; /* ⭐️ ปรับแก้: นี่คือขนาดปกติ */
+            font-weight: 700;
+            user-select: none;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes floatUp {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-50px); }
+        }
+        
+        #game-result {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+            flex-direction: column;
+            gap: 1rem;
+            background: var(--white-color);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 101;
+            text-align: center;
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <audio id="bgm" src="BGM.wav" loop onerror="console.log('หาไฟล์ BGM.wav ไม่เจอ!')"></audio>
+    <span class="floating-emoji" id="emoji-1">💖</span>
+    <span class="floating-emoji" id="emoji-2">✨</span>
+    <span class="floating-emoji" id="emoji-3">💜</span>
+    <span class="floating-emoji" id="emoji-4">🥰</span>
+
+
+    <div class="container">
+
+        <div id="stage-0" class="stage active">
+            <img src="W.jpg" alt="Welcome" id="splashImage" onerror="this.src='https://via.placeholder.com/250x250/4a148c/ffffff?text=W.jpg'; this.alt='กรุณาใส่รูป W.jpg'">
+        </div>
+        <div id="stage-1" class="stage">
+            <h1>พร้อมตอบคำถามหรือยัง</h1>
+            <p>ถ้าพร้อมแล้วไปเริ่มกันเลย!</p>
+            <button id="playButton" class="btn">PLAY</button>
+        </div>
+        <div id="stage-1-5" class="stage">
+            <h2>นี่คือคำถามที่วัดว่าคุณรู้จักชินจริงๆ</h2>
+            <button id="startQuestionsButton" class="btn">เริ่มเลย!</button>
+        </div>
+        <div id="stage-2" class="stage">
+            <h2>ข้อ 1: คุณชื่ออะไร</h2>
+            <input type="text" id="nameInput" class="name-input" placeholder="พิมพ์ชื่อของคุณที่นี่...">
+            <button id="nameNextButton" class="btn" disabled>NEXT</button>
+        </div>
+        <div id="stage-3" class="stage">
+            <h2>ข้อ 2: นี่คือคำถามง่ายๆถ้าชินเดินไปทางซ้ายประตูโรงเรียน 900 เมตร แล้วเดินไปทางขวาอีก 1800 เมตร ตรงไปอีก 1230 เมตร แล้วเลี้ยวไปทาง 14 นาฬิกาจากมุมล่าสุด 1234 เมตร ชินจะมีระยะการกระจัดเท่าไหร่</h2>
+            <div class="choices-container" data-question-id="q2">
+                <button class="choice-btn">ไม่รู้</button>
+                <button class="choice-btn">2401.78 เมตร</button>
+                <button class="choice-btn">อืมมมมมมม น่าจะ 3333.33 เมตร</button>
+                <button class="choice-btn">ชินไม่เดินหรอก เรียกแกร็ปไปเร็วกว่า</button>
+            </div>
+            <button id="q2NextButton" class="btn" disabled>NEXT</button>
+        </div>
+        <div id="stage-4" class="stage">
+            <h2>ข้อ 3: จงเรียงลำดับเหตุการณ์ที่คาดว่าจะเกิดขึ้นในชีวิตชิน</h2>
+             <div class="choices-container" data-question-id="q3">
+                <button class="choice-btn">กิน > ทำงาน > เล่นเกม > นอน</button>
+                <button class="choice-btn">กิน > นอน > กิน > นอน > กิน</button>
+                <button class="choice-btn">นอน > นอน> นอน > นอน</button>
+                <button class="choice-btn">กิน > เล่นเกม> เล่นเกมต่อ > เล่นเกมอีก</button>
+            </div>
+            <button id="q3NextButton" class="btn" disabled>NEXT</button>
+        </div>
+        <div id="stage-5" class="stage">
+            <h2>ข้อ 4: ถ้าชินกำลังจะจมน้ำ คุณจะทำอย่างไร</h2>
+             <div class="choices-container" data-question-id="q4">
+                <button class="choice-btn">เอาห่วงยางให้</button>
+                <button class="choice-btn">ไม่ช่วย ไอ่ชินมันว่ายน้ำเป็น</button>
+                <button class="choice-btn">ซื้อเรือสปีดโบ๊ทแล้วนั่งไปจีนเพื่อซื่อเรือดำน้ำมาช่วย</button>
+                <button class="choice-btn">กลายร่างเป็นไดโนเสาร์ t-rex แล้วว่ายน้ำไปช่วย</button>
+            </div>
+            <button id="q4NextButton" class="btn" disabled>NEXT</button>
+        </div>
+        <div id="stage-6" class="stage">
+            <h2>ข้อ 5: ถ้าชินถามว่า ระหว่างเงินปริศนากับภารกิจยี่สิบบาท คุณจะตอบว่าอะไร</h2>
+             <div class="choices-container" data-question-id="q5">
+                <button class="choice-btn">เอาเงินปริศนา</button>
+                <button class="choice-btn">เอาภารกิจยี่สิบบาท</button>
+                <button class="choice-btn">เอาเวลาที่ตอบคำถามข้อนี้ไปทำอย่างอื่นยังคุ้มกว่า</button>
+                <button class="choice-btn">ไม่รู้</button>
+            </div>
+            <button id="q5NextButton" class="btn" disabled>NEXT</button>
+        </div>
+        <div id="stage-7" class="stage">
+            <h2>ข้อ 6: ถ้าชีวิตนี้มีเงิน 30 ล้าน จะเอาไปทำอะไร</h2>
+             <div class="choices-container" data-question-id="q6">
+                <button class="choice-btn">เอาไปซื้อบ้านซื้อรถซื้อของที่อยากซื้อ</button>
+                <button class="choice-btn">เอาไปลงทุนในหุ้นที่ยังไงก็ได้กำไรแน่ๆ</button>
+                <button class="choice-btn">เอาไปให้ชินดีกว่า</button>
+                <button class="choice-btn">เอาอะไรมาคิดว่าจะมีตัง 30 ล้าน 30 บาท ยังไม่มีเลย</button>
+            </div>
+            <button id="q6NextButton" class="btn" disabled>NEXT</button>
+        </div>
+        <div id="stage-8" class="stage">
+            <h2>อะ ก่อนหน้านี้มันถามอะไรก็ไม่รู้ เอาจริงละ</h2>
+            <button id="interludeNextButton" class="btn">NEXT</button>
+        </div>
+        
+        <div id="stage-9" class="stage">
+            <h2>มินิเกม: กดให้ไว!</h2>
+            <p>ทำคะแนนให้ได้ <strong>มากกว่า 200 คะแนน</strong> ภายใน <strong>10 วินาที</strong> เพื่อไปต่อ!</p>
+            <p>(ระวัง 💣: -20 คะแนน / กด ⭐️: +20 คะแนน)</p>
+            <button id="startGameButton" class="btn">เริ่มเกม!</button>
+        </div>
+
+        <div id="stage-10" class="stage">
+            <h2>คุณใช่คนรู้จักของ jittipat จริงหรือไม่!!! โอนตังมาที่นี่แล้วผมจะเชื่อคุณ</h2>
+            <img src="QR.jpg" alt="QR Image" id="qrImage" onerror="this.src='https://via.placeholder.com/250x250/d81b60/ffffff?text=QR.jpg'; this.alt='กรุณาใส่รูป QR.jpg'">
+            <p class="reveal-text">แหะๆ</p>
+            <div id="summary-container">
+                </div>
+        </div>
+    </div>
+    
+    <div id="game-area">
+        <div id="game-info">
+            <span id="game-score">Score: 0</span>
+            <span id="game-timer">Time: 10</span>
+        </div>
+        <div id="game-result">
+            <h2 id="game-result-title">Title</h2>
+            <p id="game-result-score">Your Score: 0</p>
+            <button id="gameRetryButton" class="btn">ลองอีกครั้ง</button>
+            <button id="gameNextButton" class="btn" style="display: none;">NEXT</button>
+        </div>
+        <div id="countdown-overlay">3</div>
+    </div>
+
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+
+        const stages = document.querySelectorAll('.stage');
+        
+        // --- ข้อมูลคำตอบและเฉลย (ไม่เปลี่ยนแปลง) ---
+        const userAnswers = {};
+        const correctAnswers = {
+            q2: "ชินไม่เดินหรอก เรียกแกร็ปไปเร็วกว่า",
+            q3: "กิน > เล่นเกม> เล่นเกมต่อ > เล่นเกมอีก",
+            q4: "ไม่ช่วย ไอ่ชินมันว่ายน้ำเป็น",
+            q5: "เอาเวลาที่ตอบคำถามข้อนี้ไปทำอย่างอื่นยังคุ้มกว่า",
+            q6: "เอาไปให้ชินดีกว่า"
+        };
+        const questionText = {
+            q2: "ข้อ 2: ระยะการกระจัดของชิน?",
+            q3: "ข้อ 3: ลำดับเหตุการณ์ในชีวิตชิน?",
+            q4: "ข้อ 4: ถ้าชินกำลังจะจมน้ำ?",
+            q5: "ข้อ 5: เงินปริศนา vs ภารกิจ 20?",
+            q6: "ข้อ 6: ถ้ามี 30 ล้าน?"
+        };
+        
+        let finalGameScore = 0; 
+        
+        // --- (ฟังก์ชัน showStage, generateSummary ... ไม่เปลี่ยนแปลง) ---
+        function showStage(stageId) {
+            stages.forEach(stage => stage.classList.remove('active'));
+            const activeStage = document.getElementById(stageId);
+            if (activeStage) {
+                activeStage.classList.add('active');
+            }
+            window.scrollTo(0, 0);
+        }
+        function generateSummary() {
+            const container = document.getElementById('summary-container');
+            let summaryHTML = '<h3>สรุปคำตอบ</h3>';
+            
+            for (const qId in correctAnswers) {
+                const userAns = userAnswers[qId] || "<i>ไม่ได้เลือกคำตอบ</i>";
+                const correctAns = correctAnswers[qId];
+                const isCorrect = userAns === correctAns;
+
+                summaryHTML += `
+                    <div class="summary-item">
+                        <p><strong>${questionText[qId]}</strong></p>
+                        <p style="color: ${isCorrect ? 'green' : 'red'};">
+                            คำตอบของคุณ: ${userAns} ${isCorrect ? '✅' : '❌'}
+                        </p>
+                        ${!isCorrect ? `<p style="color: green;">เฉลย: ${correctAns}</p>` : ''}
+                        ${qId === 'q2' ? `
+                            <p class="calc-note">
+                                <strong>วิธีทำ (แบบงงๆ):</strong> (ซ้าย 900) + (ขวา 1800) = (ขวา 900)
+                                (ขวา 900) + (ตรง 1230) + (เลี้ยว 14 นาฬิกา 1234) = ???
+                                <br><strong>สรุป:</strong> คำตอบที่ถูกคือข้อ 4 จ้า! 🤣
+                            </p>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            summaryHTML += `
+                <div id="game-score-summary">
+                    คะแนนมินิเกม: ${finalGameScore}
+                </div>
+            `;
+            container.innerHTML = summaryHTML;
+        }
+
+
+        // --- BGM Logic (ไม่เปลี่ยนแปลง) ---
+        const bgm = document.getElementById('bgm');
+        let isMusicPlaying = false; 
+
+        // --- Game Logic Variables (ไม่เปลี่ยนแปลง) ---
+        const gameArea = document.getElementById('game-area');
+        const gameInfo = document.getElementById('game-info');
+        const gameScoreEl = document.getElementById('game-score');
+        const gameTimerEl = document.getElementById('game-timer');
+        const countdownOverlay = document.getElementById('countdown-overlay');
+        const gameResultEl = document.getElementById('game-result');
+        const gameResultTitle = document.getElementById('game-result-title');
+        const gameResultScore = document.getElementById('game-result-score');
+        const gameRetryButton = document.getElementById('gameRetryButton');
+        const gameNextButton = document.getElementById('gameNextButton');
+        let gameScore = 0;
+        let gameTimer = 10;
+        let isGameRunning = false;
+        let gameTimerInterval = null;
+        let emojiSpawnInterval = null;
+
+
+        // --- (Event Listeners สำหรับปุ่มและตัวเลือก ... ไม่เปลี่ยนแปลง) ---
+        // Stage 0 -> 1
+        document.addEventListener('DOMContentLoaded', () => { setTimeout(() => { showStage('stage-1'); }, 1000); });
+        // Stage 1 -> 1.5
+        document.getElementById('playButton').addEventListener('click', () => {
+            showStage('stage-1-5');
+            if (!isMusicPlaying) { bgm.play().catch(e => console.log("BGM bị chặn")); isMusicPlaying = true; }
+        });
+        // Stage 1.5 -> 2
+        document.getElementById('startQuestionsButton').addEventListener('click', () => showStage('stage-2'));
+        // Stage 2 (Name)
+        const nameInput = document.getElementById('nameInput');
+        const nameNextButton = document.getElementById('nameNextButton');
+        nameInput.addEventListener('input', () => { nameNextButton.disabled = nameInput.value.trim() === ''; });
+        nameNextButton.addEventListener('click', () => showStage('stage-3'));
+        // Choice Buttons
+        const choiceContainers = document.querySelectorAll('.choices-container');
+        choiceContainers.forEach(container => {
+            const questionId = container.dataset.questionId;
+            const choices = container.querySelectorAll('.choice-btn');
+            const nextButton = container.nextElementSibling;
+            choices.forEach(choice => {
+                choice.addEventListener('click', () => {
+                    choices.forEach(btn => btn.classList.remove('selected'));
+                    choice.classList.add('selected');
+                    userAnswers[questionId] = choice.textContent.trim();
+                    nextButton.disabled = false;
+                });
+            });
+        });
+        // ปุ่ม NEXT ของคำถาม
+        document.getElementById('q2NextButton').addEventListener('click', () => showStage('stage-4'));
+        document.getElementById('q3NextButton').addEventListener('click', () => showStage('stage-5'));
+        document.getElementById('q4NextButton').addEventListener('click', () => showStage('stage-6'));
+        document.getElementById('q5NextButton').addEventListener('click', () => showStage('stage-7'));
+        document.getElementById('q6NextButton').addEventListener('click', () => showStage('stage-8'));
+        document.getElementById('interludeNextButton').addEventListener('click', () => showStage('stage-9'));
+        // Emoji ลอย
+        const emojis = document.querySelectorAll('.floating-emoji');
+        emojis.forEach(emoji => {
+            emoji.addEventListener('click', () => {
+                emoji.classList.add('hidden');
+                setTimeout(() => { emoji.classList.remove('hidden'); }, 3000);
+            });
+        });
+
+        // --- ⭐️ Game Button Listeners (ปรับแก้) ⭐️ ---
+        
+        document.getElementById('startGameButton').addEventListener('click', () => {
+            gameArea.style.display = 'block';
+            startCountdown();
+        });
+        gameRetryButton.addEventListener('click', () => {
+            gameResultEl.style.display = 'none';
+            startCountdown();
+        });
+        gameNextButton.addEventListener('click', () => {
+            gameArea.style.display = 'none';
+            generateSummary(); 
+            showStage('stage-10');
+        });
+
+        // --- ⭐️ Game Functions (ปรับแก้) ⭐️ ---
+
+        function startCountdown() {
+            let count = 3;
+            countdownOverlay.textContent = count;
+            countdownOverlay.style.display = 'flex';
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownOverlay.textContent = count;
+                } else {
+                    clearInterval(countdownInterval);
+                    countdownOverlay.style.display = 'none';
+                    startGame();
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            isGameRunning = true;
+            gameScore = 0;
+            gameTimer = 10;
+            gameScoreEl.textContent = `Score: ${gameScore}`;
+            gameTimerEl.textContent = `Time: ${gameTimer}`;
+            gameResultEl.style.display = 'none';
+            gameNextButton.style.display = 'none';
+            gameRetryButton.style.display = 'block';
+
+            gameTimerInterval = setInterval(() => {
+                gameTimer--;
+                gameTimerEl.textContent = `Time: ${gameTimer}`;
+                if (gameTimer <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            spawnEmojiLoop();
+        }
+
+        function spawnEmojiLoop() {
+            if (!isGameRunning) return;
+            
+            spawnEmoji();
+            
+            /* ⭐️ ปรับแก้: เพิ่มจำนวน (ลดเวลารอ) ⭐️ */
+            let spawnRate = 350 - ((10 - gameTimer) * 25); // 350ms -> 100ms
+            if (spawnRate < 100) spawnRate = 100;
+
+            emojiSpawnInterval = setTimeout(spawnEmojiLoop, spawnRate);
+        }
+
+        function spawnEmoji() {
+            if (!isGameRunning) return;
+
+            const emojiEl = document.createElement('div');
+            emojiEl.classList.add('game-emoji');
+            
+            /* ⭐️ ปรับแก้: เพิ่มดาว ⭐️ */
+            let points;
+            const rand = Math.random();
+            if (rand < 0.15) { // 15% ระเบิด
+                emojiEl.textContent = '💣';
+                points = -20;
+            } else if (rand < 0.30) { // 15% ดาว
+                emojiEl.textContent = '⭐';
+                points = 20;
+            } else { // 70% ปกติ
+                const goodEmojis = ['💖', '✨', '💜', '🥰'];
+                emojiEl.textContent = goodEmojis[Math.floor(Math.random() * goodEmojis.length)];
+                points = 10;
+            }
+
+            // สุ่มตำแหน่งเกิด
+            const edge = Math.floor(Math.random() * 4);
+            let startX, startY, endX, endY;
+            
+            /* ⭐️ ปรับแก้: ลดความเร็ว (เพิ่ม duration) ⭐️ */
+            const duration = (Math.random() * 2 + 3) - ((10 - gameTimer) * 0.15); // 5s -> 3.5s
+
+            switch (edge) {
+                case 0: /* บน */ startX = Math.random() * window.innerWidth; startY = -50; endX = Math.random() * window.innerWidth; endY = window.innerHeight + 50; break;
+                case 1: /* ขวา */ startX = window.innerWidth + 50; startY = Math.random() * window.innerHeight; endX = -50; endY = Math.random() * window.innerHeight; break;
+                case 2: /* ล่าง */ startX = Math.random() * window.innerWidth; startY = window.innerHeight + 50; endX = Math.random() * window.innerWidth; endY = -50; break;
+                case 3: /* ซ้าย */ startX = -50; startY = Math.random() * window.innerHeight; endX = window.innerWidth + 50; endY = Math.random() * window.innerHeight; break;
+            }
+
+            emojiEl.style.left = `${startX}px`;
+            emojiEl.style.top = `${startY}px`;
+            emojiEl.style.transition = `transform ${duration}s linear`;
+            gameArea.appendChild(emojiEl);
+            
+            setTimeout(() => {
+                if (!isGameRunning) return;
+                emojiEl.style.transform = `translate(${endX - startX}px, ${endY - startY}px)`;
+            }, 10);
+            
+            setTimeout(() => {
+                emojiEl.remove();
+            }, duration * 1000);
+            
+            emojiEl.addEventListener('mousedown', (e) => {
+                if (!isGameRunning) return;
+                gameScore += points;
+                gameScoreEl.textContent = `Score: ${gameScore}`;
+                showFloatingScore(e.clientX, e.clientY, points);
+                emojiEl.remove();
+            });
+        }
+        
+        function showFloatingScore(x, y, points) {
+            const scoreText = document.createElement('div');
+            scoreText.classList.add('floating-score');
+            
+            /* ⭐️ ปรับแก้: สไตล์ตัวเลขตามคะแนน ⭐️ */
+            if (points > 10) { // +20 (ดาว)
+                scoreText.textContent = `+${points}`;
+                scoreText.style.color = 'gold';
+                scoreText.style.fontSize = '2.2rem';
+                scoreText.style.fontWeight = 'bold';
+                scoreText.style.textShadow = '0 0 5px black'; // เพิ่มเงาให้อ่านง่าย
+            } else if (points > 0) { // +10 (ปกติ)
+                scoreText.textContent = `+${points}`;
+                scoreText.style.color = 'green';
+                scoreText.style.fontSize = '1.5rem';
+            } else { // -20 (ระเบิด)
+                scoreText.textContent = `${points}`;
+                scoreText.style.color = 'red';
+                scoreText.style.fontSize = '1.5rem';
+            }
+            
+            scoreText.style.left = `${x}px`;
+            scoreText.style.top = `${y}px`;
+            
+            gameArea.appendChild(scoreText);
+            
+            setTimeout(() => {
+                scoreText.remove();
+            }, 1000);
+        }
+
+        function endGame() {
+            isGameRunning = false;
+            clearInterval(gameTimerInterval);
+            clearTimeout(emojiSpawnInterval); 
+            
+            document.querySelectorAll('.game-emoji').forEach(el => el.remove());
+            
+            gameResultEl.style.display = 'flex';
+            gameResultScore.textContent = `คะแนนของคุณ: ${gameScore}`;
+            finalGameScore = gameScore; 
+            
+            if (gameScore >= 200 ) {
+                gameResultTitle.textContent = 'ยินดีด้วย, คุณชนะ!';
+                gameRetryButton.style.display = 'none';
+                gameNextButton.style.display = 'block';
+            } else {
+                gameResultTitle.textContent = 'แพ้ซะงั้น! (ไม่ถึง 200)';
+                gameRetryButton.style.display = 'block';
+                gameNextButton.style.display = 'none';
+            }
+        }
+
+    </script>
+
+</body>
+</html>
